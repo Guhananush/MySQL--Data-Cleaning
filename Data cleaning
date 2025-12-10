@@ -1,1 +1,229 @@
+-- Data cleaning 
+
+select *
+from layoffs;
+
+-- 1. Remove thr duplicate
+-- 2. Standardize the data 
+-- 3. Null values or blank values 
+-- 4. Remove any columns 
+
+create table anushlay
+like layoffs;
+
+select *
+from anushlay;
+
+insert anushlay 
+select *
+from layoffs;
+
+
+-----
+-- 1. Remove thr duplicate
+
+select *,
+row_number() over(
+partition by company , industry , total_laid_off , percentage_laid_off , `date` ) as row_nom
+from anushlay;
+
+with dup_cte as
+(
+select *,
+row_number() over(
+partition by company ,location, industry , total_laid_off , percentage_laid_off , `date`,stage , country,funds_raised_millions) as row_nom
+from anushlay
+)
+
+select *
+from dup_cte 
+where row_nom > 1;
+
+create table `anushlay2`(
+`company` text, 
+`location` text, 
+`industry` text ,
+`total_laid_off` int ,
+`percentage_laid_off` text ,
+`date` text ,
+`stage` text ,
+`country` text, 
+`funds_raised_millions` int default null,
+`row_nom`  int 
+) engine=InnoDB default charset=utf8mb4 collate=utf8mb4_0900_ai_ci;
+
+
+select *
+from anushlay2;
+
+insert into anushlay2
+select *,
+row_number() over(
+partition by company ,location, industry , total_laid_off , percentage_laid_off , `date`,stage , country,funds_raised_millions) as row_nom
+from anushlay;
+
+select *
+from anushlay2
+where row_nom > 1;
+
+set SQL_SAFE_UPDATES = 0;
+                                                # important you know it......
+delete from anushlay2 where row_nom > 1;
+
+select *
+from anushlay2
+where row_nom > 1;
+
+-- 2. Standardize the data 
+
+select company, trim(company)
+from anushlay2;
+
+update anushlay2
+set company =  trim(company);
+
+select company, trim(company)
+from anushlay2;
+
+select distinct industry  # distinct  is used for not to rpeate ...for example in (industry) column there two markating rows but, it show inly only one one markationg row ...
+from anushlay2
+order by 1;
+
+# So here in industry column there are three types like crypto , cryptocurrency and crypto currencey ....but , these three are same so , we standarized as Crypto all.
+
+select *
+from anushlay2
+where industry  like 'Crypto%';
+
+update anushlay2
+set industry = 'Crypto'
+where industry like 'Crypto%' ; 
+
+select distinct country # same standarized problem in united states so now we are gonna change 
+from anushlay2
+order by 1;
+
+select distinct country
+from anushlay2
+where country like 'United States%';
+
+select *
+from anushlay2
+where country like 'United States%';
+
+update anushlay2
+set country = 'United States'
+where country like 'United States%'; #fineshed 
+
+select distinct country
+from anushlay2
+where country like 'United States%'; # check it 
+
+# formating
+
+select `date`,
+str_to_date(`date`, '%m/%d/%Y')  #use capes Y
+from anushlay2;
+
+update anushlay2
+set `date` = str_to_date(`date`, '%m/%d/%Y')
+where `date`;
+
+select *
+from anushlay2;
+
+# here when we saw anushlay2 --> colums --> date . We can see here sate as text but it should be int ir data .So, now how to change it?
+
+alter table anushlay2
+modify column `date` DATE; # Done 
+
+# Now how to handel Null data's
+
+select *
+from anushlay2
+where total_laid_off is Null # when we work on null types ,confrom we should use (is Null) not (like , = )
+and percentage_laid_off is Null;
+
+select *
+from anushlay2
+where industry is null
+or industry = '';   # basically while exprasing non valuse thereshoud be no space '' (not ' ' )
+
+update anushlay2
+set industry = null
+where industry like ''; 
+
+select *
+from anushlay2
+where company = 'Airbnb';
+
+select *
+from anushlay2 as t1
+join anushlay2 as t2
+   on t1.company = t2.company
+where (t1.industry is null or t1.industry = '')
+and t2.industry is not null;  
+
+#  First make all blank values as null and fill the values from another table 
+
+update anushlay2 as t1
+join anushlay2 as t2
+  on t1.company = t2.company
+set t1.industry = t2.industry 
+where t1.industry is null
+and t2.industry is not null;
+
+
+---
+
+select *
+from anushlay2;
+
+select *
+from anushlay2
+where total_laid_off is null
+and percentage_laid_off is null;
+
+delete
+from anushlay2
+where total_laid_off is null
+and percentage_laid_off is null ;
+
+select *
+from anushlay2;
+
+alter table anushlay2
+drop column row_nom;
+
+# This is the cleand data
+select *
+from anushlay2;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
