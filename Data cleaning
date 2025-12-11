@@ -1,5 +1,7 @@
 -- Data cleaning 
 
+-- To practic this all operation ,I uesd this anushoff.csv data
+-- File name = "ansuhoff.csv", This file is just down this file 
 select *
 from layoffs;
 
