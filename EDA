@@ -1,0 +1,107 @@
+-- EDA = Exploratory Data Analysis
+
+-- EDA = Understanding the data before doing any model or decision.
+
+select *
+from anushlay2;
+
+select max(total_laid_off),max(percentage_laid_off)
+from anushlay2;
+
+# searching the Highest funds reaiesd in millions 
+select *
+from anushlay2
+where percentage_laid_off = 1
+order by funds_raised_millions desc;
+
+# So, to understand the the data first we should know ,which company lasif off more employes 
+select company, sum(total_laid_off)
+from anushlay2
+group by company 
+order by 2 desc;
+
+#After that we should know in which act time this data happend (start date and end date)
+select min(`date`),max(`date`)
+from anushlay2;
+
+# to understand thid data who got affected in this data.So, We are finding which type of induatry got lot if laid_off
+select industry, sum(total_laid_off)
+from anushlay2
+group by industry 
+order by 2 desc;
+
+select *
+from anushlay2;
+
+# And we are finding which country laif off more and affected 
+select country , sum(total_laid_off)
+from anushlay2
+group by country 
+order by 2 desc;
+
+# After this all ,We should know perticularly how much laid_off got perticular year .
+select year(`date`) , sum(total_laid_off)
+from anushlay2
+where year(`date`) is not null
+group by year(`date`)
+order by 1 desc;
+
+select stage , sum(total_laid_off)
+from anushlay2
+group by stage
+order by 2 desc;
+
+select *
+from anushlay2;
+
+# To understand this data more we are finding the laid_off between Months
+select substring(`date`,1,7) as `Month`,sum(total_laid_off)
+from anushlay2
+where substring(`date`,1,7) is not null
+group by `Month`
+order by 1 asc;
+
+# Rolling Total
+# One of important things to know and to do...
+
+with Rolling_total as
+(
+select substring(`date`,1,7) as `Month`,sum(total_laid_off) as total_off
+from anushlay2
+where substring(`date`,1,7) is not null
+group by `Month`
+order by 1 asc
+)
+select `Month` , total_off , 
+sum(total_off) over(order by `Month` ) as rolling_total
+from Rolling_total;
+
+# Finding Perticular comapny one which year hade more laid of 
+select company ,year(`date`) ,sum(total_laid_off)
+from anushlay2
+group by company,year(`date`)
+order by 3 desc;
+
+-- TOUGHER QUERIES------------------------------------------------------------------------------------------------------------------------------------
+
+-- Earlier we looked at Companies with the most Layoffs. Now let's look at that per year. It's a little more difficult.
+-- WE want to look at 
+
+with company_year (company ,years , total_laid_off ) as 
+(
+select company ,year(`date`) ,sum(total_laid_off)
+from anushlay2
+group by company,year(`date`)
+) ,
+company_year_rank as 
+(
+select * , 
+dense_rank() over (partition by years order by total_laid_off desc) as ranking
+from company_year 
+where years is not null
+)
+select *
+from company_year_rank 
+where ranking <= 5;
+
+
